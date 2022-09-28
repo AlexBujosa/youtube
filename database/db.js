@@ -31,8 +31,13 @@ const videoSchema = new mongoose.Schema({
     userImg :{
         type:String,
         required : true,
+    },
+    userId :{
+        type:String,
+        required : true,
     }
-});
+},
+{timestamps : true});
 const channelSchema = new mongoose.Schema({
     email : {
         type: String,
@@ -48,8 +53,44 @@ const channelSchema = new mongoose.Schema({
         required : true,
     }
 })
+const commentSchema = new mongoose.Schema({
+    userId : {
+        type : String, 
+        required : true
+    },
+    comment : {
+        type : String,
+        required : true
+    },
+    videoId : {
+        type : String,
+        required : true
+    },
+    name : {
+        type : String, 
+        required : true
+    },
+    userImg :{
+        type:String,
+        required : true,
+    }
+}, {timestamps : true});
+
+const viewsSchema = new mongoose.Schema({
+    userId : {
+        type : String,
+        required : true,
+    },
+    videoId : {
+        type : String,
+        required : true,
+    }
+}, {timestamps : true});
+viewsSchema.index({userId : 1, videoId : 1}, {unique : true});
+const comment = mongoose.model('comments', commentSchema);
 const video = mongoose.model('videos', videoSchema);
-const channel = mongoose.model('channel', channelSchema);
+const channel = mongoose.model('channels', channelSchema);
+const view = mongoose.model('views', viewsSchema);
 mongoose.connect(
     process.env.MONGODB_URL, 
     {
@@ -60,12 +101,43 @@ mongoose.connect(
 
 async function getAllVideo(){
     const filter = {}
-    var allVideos = await video.find(filter).select('title name description videofile photo userImg').exec();
+    var allVideos = await video.find(filter).select('title name description videofile photo userImg createdAt userId').exec();
     return allVideos;
 }
-
+async function getAllComment(videoId){
+    const filter = {
+        videoId : videoId
+    }
+    var allComment = await comment.find(filter).select('userId comment videoId name userImg createdAt').exec();
+    return allComment;
+}
+async function getAuth( email){
+    const filter = {
+        email : email,
+    }
+    var getAuth = await channel.findOne(filter).select('_id').exec();
+    return getAuth;
+}
+async function getViews(videoId){
+    const filter = {
+        videoId : videoId
+    }
+    var views = await view.find(filter).select('_id').exec()
+    return views;
+}
+async function getAllViews(){
+    const filter ={}
+    var views = await view.find(filter).select('videoId').exec()
+    return views;
+}
 module.exports = {
     video : video,
     channel : channel,
-    GetAllVideo : getAllVideo
+    comment : comment,
+    view : view, 
+    GetAllVideo : getAllVideo,
+    GetAllComment : getAllComment,
+    GetAuth : getAuth,
+    GetViews : getViews,
+    GetAllViews : getAllViews
 }
