@@ -86,11 +86,23 @@ const viewsSchema = new mongoose.Schema({
         required : true,
     }
 }, {timestamps : true});
+const suscriberSchema = new mongoose.Schema({
+    userId : {
+        type : String,
+        required : true,
+    },
+    secUserId : {
+        type : String,
+        required : true,
+    }
+}, {timestamps : true})
 viewsSchema.index({userId : 1, videoId : 1}, {unique : true});
+suscriberSchema.index({userId : 1, videoId : 1}, {unique : true});
 const comment = mongoose.model('comments', commentSchema);
 const video = mongoose.model('videos', videoSchema);
 const channel = mongoose.model('channels', channelSchema);
 const view = mongoose.model('views', viewsSchema);
+const suscriber = mongoose.model('suscribers', suscriberSchema);
 mongoose.connect(
     process.env.MONGODB_URL, 
     {
@@ -126,17 +138,28 @@ async function getViews(videoId){
     return views;
 }
 async function getAllViews(){
-    const filter ={}
+    const filter ={
+    }
     var views = await view.find(filter).select('videoId').exec()
     return views;
+}
+async function getChannelSuscriber(userId){
+    const filter = {
+        userId : userId
+    }
+    var allChannelSuscribed = await suscriber.find(filter).select('secUserId').exec();
+    console.log(allChannelSuscribed);
+    return allChannelSuscribed;
 }
 module.exports = {
     video : video,
     channel : channel,
     comment : comment,
     view : view, 
+    suscriber : suscriber,
     GetAllVideo : getAllVideo,
     GetAllComment : getAllComment,
+    GetChannelSuscribed : getChannelSuscriber,
     GetAuth : getAuth,
     GetViews : getViews,
     GetAllViews : getAllViews

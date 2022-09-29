@@ -5,7 +5,7 @@ const multer = require('multer')
 const crypto = require('crypto');
 const bodyParser= require('body-parser')
 const mimeTypes = require('mime-types');
-const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view} = require('./database/db');
+const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view, suscriber, GetChannelSuscribed} = require('./database/db');
 const typeVideo = ["video/mp4", "video/avi", "video/flv", "video/mov", "video/mov"];
 const typeImage = ["image/jpeg", "image/png", "image/jpg"];
 const fs = require('fs')
@@ -52,7 +52,6 @@ app.get('/',async(req, res)=>{
             videoArr.push(video);
         });
     });
-    console.log(videoArr);
     res.status(200).json({sucess:true, videos : videoArr})
 })
 app.post('/upload/file',upload.fields([{name:'file', maxCount : 1}, {name:'miniature', maxCount : 1}]), (req, res)=>{
@@ -72,7 +71,6 @@ app.post('/upload/file',upload.fields([{name:'file', maxCount : 1}, {name:'minia
     newVideo.save().then(()=>{
         res.status(200).json({sucess:true, msg:"Charging completed"})
     }).catch(error =>{
-        console.log('Files Remove Error Ocurred :', error)
         unlink(file[0].path)
         unlink(miniature[0].path)
         res.status(200).json({sucess:false, msg:"Something Failed"})
@@ -95,7 +93,6 @@ app.post('/auth/channel', (req, res) =>{
 app.post('/getAuth', async(req, res)=>{
     const {email}= req.body;
     await GetAuth(email).then((Auth)=>{
-        console.log(Auth);
         res.status(200).json({sucess:true, auth : Auth})
     }).catch(()=>{
         res.status(200).json({sucess:true, auth : "error"})
@@ -152,6 +149,32 @@ app.post('/register/views', (req, res)=>{
     }).catch(()=>{
         res.status(200).json({success: false, msg : "View already registered"})
     })
+})
+app.post('/suscribe', (req, res)=>{
+    const {userId, secUserId} = req.body;
+    const newSuscriber = new suscriber({
+        userId : userId,
+        secUserId : secUserId,
+    })
+    newSuscriber.save().then(()=>{
+        res.status(200).json({sucess:true, msg : "Subscribed user"})
+    }).catch(()=>{
+        res.status(200).json({sucess:false, msg : "Previously registered user" })
+    })
+    
+})
+app.post('/getAllSuscribeChannel', (req, res)=>{
+    const {userId} = req.body;
+    GetChannelSuscribed(userId).then((channels)=>{
+        var allChannels = []
+        channels.forEach((channel)=>{
+            allChannels.push(channel.secUserId);
+        })
+        res.status(200).json({sucess:true, channelsSuscribed : allChannels})
+    }).catch(()=>{
+        res.status(200).json({sucess:true, channelsSuscribed : null})
+    })
+    
 })
 app.listen(4000, (req, res)=>{
     console.log('Server Up!')
