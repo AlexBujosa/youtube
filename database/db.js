@@ -151,6 +151,22 @@ async function getChannelSuscriber(userId){
     console.log(allChannelSuscribed);
     return allChannelSuscribed;
 }
+async function getVideoSuscriber(secUserId){
+    const filter = {
+        secUserId : secUserId
+    }
+    var getVideoSuscriber = await suscriber.find(filter).select('').exec();
+    return getVideoSuscriber.length;
+}
+async function unSuscribe(userId, secUserId){
+    const filter ={
+        userId : userId, 
+        secUserId : secUserId
+    }
+    return suscriber.deleteOne(filter).exec().then((res)=>{
+        if(res.deletedCount === 1) return "se ha eliminado";
+    });
+}
 module.exports = {
     video : video,
     channel : channel,
@@ -162,5 +178,7 @@ module.exports = {
     GetChannelSuscribed : getChannelSuscriber,
     GetAuth : getAuth,
     GetViews : getViews,
-    GetAllViews : getAllViews
+    GetAllViews : getAllViews,
+    GetVideoSuscriber : getVideoSuscriber,
+    UnSuscribe : unSuscribe
 }

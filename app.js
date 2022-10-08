@@ -5,7 +5,7 @@ const multer = require('multer')
 const crypto = require('crypto');
 const bodyParser= require('body-parser')
 const mimeTypes = require('mime-types');
-const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view, suscriber, GetChannelSuscribed} = require('./database/db');
+const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view, suscriber, GetChannelSuscribed, GetVideoSuscriber, UnSuscribe} = require('./database/db');
 const typeVideo = ["video/mp4", "video/avi", "video/flv", "video/mov", "video/mov"];
 const typeImage = ["image/jpeg", "image/png", "image/jpg"];
 const fs = require('fs')
@@ -163,6 +163,20 @@ app.post('/suscribe', (req, res)=>{
     })
     
 })
+app.post('/unsuscribe', (req, res)=>{
+    const {userId, secUserId} = req.body;
+    UnSuscribe(userId, secUserId).then((resp)=>{
+        console.log(resp);
+        if (resp === "se ha eliminado") {
+            res.status(200).json({sucess:true, msg : "Unsubscribed user"})
+        }else{
+            res.status(200).json({sucess:true, msg : "Somenthing Ocurred trying to deleted"})
+        }
+        
+    }).catch(()=>{
+        res.status(200).json({sucess:false, msg : "Error ocurred"})
+    })
+})
 app.post('/getAllSuscribeChannel', (req, res)=>{
     const {userId} = req.body;
     GetChannelSuscribed(userId).then((channels)=>{
@@ -175,6 +189,15 @@ app.post('/getAllSuscribeChannel', (req, res)=>{
         res.status(200).json({sucess:true, channelsSuscribed : null})
     })
     
+})
+app.post('/getVideoSuscriber', (req, res)=>{
+    const {secUserId} = req.body;
+    GetVideoSuscriber(secUserId).then((count)=>{
+        res.status(200).json({sucess:true, countSuscriber: count})
+    }).catch(()=>{
+        res.status(200).json({sucess:false, countSuscriber: 0})
+    });
+
 })
 app.listen(4000, (req, res)=>{
     console.log('Server Up!')
