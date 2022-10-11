@@ -5,7 +5,7 @@ const multer = require('multer')
 const crypto = require('crypto');
 const bodyParser= require('body-parser')
 const mimeTypes = require('mime-types');
-const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view, suscriber, GetChannelSuscribed, GetVideoSuscriber, UnSuscribe} = require('./database/db');
+const {video, GetAllVideo, comment, channel,GetAuth, GetAllComment, GetViews, GetAllViews, view, suscriber, GetChannelSuscribed, GetVideoSuscriber, UnSuscribe, like, CheckUserLike, GetVideoLikes,GetMyLikes} = require('./database/db');
 const typeVideo = ["video/mp4", "video/avi", "video/flv", "video/mov", "video/mov"];
 const typeImage = ["image/jpeg", "image/png", "image/jpg"];
 const fs = require('fs')
@@ -198,6 +198,59 @@ app.post('/getVideoSuscriber', (req, res)=>{
         res.status(200).json({sucess:false, countSuscriber: 0})
     });
 
+})
+app.post('/getVideoLikes', (req, res)=>{
+    const {videoId} = req.body;
+    GetVideoLikes(videoId).then((countLikes)=>{
+        console.log(countLikes)
+        res.status(200).json({sucess:true, countLikes: countLikes})
+    });
+    
+})
+app.post('/getMyVideoLike', (req, res)=>{
+    const {videoId, userId} = req.body;
+    GetMyLikes(userId, videoId).then((typeLike)=>{
+        var statusLike;
+        if(typeLike.length !== 0){
+            statusLike = typeLike[0].typeLike;
+        }else{
+            statusLike = null;
+        }
+        
+        res.status(200).json({sucess:true, status : statusLike})
+    })
+    
+})
+app.post('/like', async(req, res)=>{
+    const {userId, videoId, typeLike} = req.body;
+    var resp = await CheckUserLike(userId, videoId);
+    const filter = {
+        userId : userId,
+        videoId : videoId,
+        typeLike : typeLike
+    }
+    const newLike = new like(filter);
+    if(resp.length === 0){
+        newLike.save().then(()=>{
+            res.status(200).json({sucess:true, msg: "sucessfull"})
+        }).catch(()=>{
+            res.status(200).json({sucess:false, msg: "oh oh Error Ocurred "})
+        })
+    }else if(resp[0].typeLike === typeLike){
+        like.deleteOne({userId : userId, videoId : videoId}).exec().then(()=>{
+            res.status(200).json({sucess:true, msg: "sucessfull deleted"})
+        }).catch(()=>{
+            res.status(200).json({sucess:false, msg: "oh oh Error Ocurred. Trying to deleted"})
+        });
+    }else{
+        like.updateOne(filter).exec().then(()=>{
+            res.status(200).json({sucess:true, msg: "sucessfull updated"})
+        }).catch(()=>{
+            res.status(200).json({sucess:false, msg: "oh oh Error Ocurred. Trying to updated"})
+        })
+    }
+    
+   
 })
 app.listen(4000, (req, res)=>{
     console.log('Server Up!')

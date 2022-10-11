@@ -96,6 +96,21 @@ const suscriberSchema = new mongoose.Schema({
         required : true,
     }
 }, {timestamps : true})
+const likeSchema = new mongoose.Schema({
+    userId : {
+        type : String,
+        required : true,
+    },
+    videoId : {
+        type : String,
+        required : true
+    },
+    typeLike : {
+        type : Boolean,
+        required : true,
+    }
+}, {timestamps : true});
+likeSchema.index({userId : 1, videoId : 1},{unique : true})
 viewsSchema.index({userId : 1, videoId : 1}, {unique : true});
 suscriberSchema.index({userId : 1, videoId : 1}, {unique : true});
 const comment = mongoose.model('comments', commentSchema);
@@ -103,6 +118,7 @@ const video = mongoose.model('videos', videoSchema);
 const channel = mongoose.model('channels', channelSchema);
 const view = mongoose.model('views', viewsSchema);
 const suscriber = mongoose.model('suscribers', suscriberSchema);
+const like = mongoose.model('like', likeSchema);
 mongoose.connect(
     process.env.MONGODB_URL, 
     {
@@ -167,12 +183,36 @@ async function unSuscribe(userId, secUserId){
         if(res.deletedCount === 1) return "se ha eliminado";
     });
 }
+async function checkUserLike(userId, videoId){
+    const filter = {
+        userId : userId,
+        videoId : videoId
+    }
+    var response = await like.find(filter).select('typeLike').exec();
+    return response;
+}
+async function getVideoLikes(videoId){
+    const filter = {
+        videoId : videoId
+    }
+    var response = await like.find(filter).select('typeLike').exec();
+    return response;
+}
+async function getMyLike(userId, videoId){
+    const filter = {
+        videoId : videoId,
+        userId : userId
+    }
+    var response = await like.find(filter).select('typeLike').exec();
+    return response;
+}
 module.exports = {
     video : video,
     channel : channel,
     comment : comment,
     view : view, 
     suscriber : suscriber,
+    like : like, 
     GetAllVideo : getAllVideo,
     GetAllComment : getAllComment,
     GetChannelSuscribed : getChannelSuscriber,
@@ -180,5 +220,8 @@ module.exports = {
     GetViews : getViews,
     GetAllViews : getAllViews,
     GetVideoSuscriber : getVideoSuscriber,
-    UnSuscribe : unSuscribe
+    UnSuscribe : unSuscribe,
+    CheckUserLike : checkUserLike,
+    GetVideoLikes: getVideoLikes,
+    GetMyLikes: getMyLike
 }
