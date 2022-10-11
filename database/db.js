@@ -164,7 +164,6 @@ async function getChannelSuscriber(userId){
         userId : userId
     }
     var allChannelSuscribed = await suscriber.find(filter).select('secUserId').exec();
-    console.log(allChannelSuscribed);
     return allChannelSuscribed;
 }
 async function getVideoSuscriber(secUserId){
@@ -203,8 +202,9 @@ async function getMyLike(userId, videoId){
         videoId : videoId,
         userId : userId
     }
-    var response = await like.find(filter).select('typeLike').exec();
-    return response;
+    return await like.find(filter).select('typeLike').exec().then((res)=>{
+        return res;
+    });
 }
 module.exports = {
     video : video,

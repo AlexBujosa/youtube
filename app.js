@@ -202,8 +202,9 @@ app.post('/getVideoSuscriber', (req, res)=>{
 app.post('/getVideoLikes', (req, res)=>{
     const {videoId} = req.body;
     GetVideoLikes(videoId).then((countLikes)=>{
-        console.log(countLikes)
-        res.status(200).json({sucess:true, countLikes: countLikes})
+        var counterLikes = countLikes.filter((likes)=> likes.typeLike === true).length;
+        var counterDislikes = countLikes.filter((dislikes)=> dislikes.typeLike === false).length;
+        res.status(200).json({sucess:true, counterLikes : counterLikes, counterDislikes:counterDislikes})
     });
     
 })
@@ -223,18 +224,27 @@ app.post('/getMyVideoLike', (req, res)=>{
 })
 app.post('/like', async(req, res)=>{
     const {userId, videoId, typeLike} = req.body;
+    console.log(userId, videoId, typeLike);
     var resp = await CheckUserLike(userId, videoId);
     const filter = {
         userId : userId,
         videoId : videoId,
         typeLike : typeLike
     }
+    const update = ({
+        userId : userId,
+    videoId : videoId
+    }, {
+        $set: {
+            typeLike : typeLike
+        }
+    });
     const newLike = new like(filter);
     if(resp.length === 0){
         newLike.save().then(()=>{
             res.status(200).json({sucess:true, msg: "sucessfull"})
         }).catch(()=>{
-            res.status(200).json({sucess:false, msg: "oh oh Error Ocurred "})
+            res.status(200).json({sucess:false, msg: "oh oh Error Ocurred"})
         })
     }else if(resp[0].typeLike === typeLike){
         like.deleteOne({userId : userId, videoId : videoId}).exec().then(()=>{
@@ -243,7 +253,8 @@ app.post('/like', async(req, res)=>{
             res.status(200).json({sucess:false, msg: "oh oh Error Ocurred. Trying to deleted"})
         });
     }else{
-        like.updateOne(filter).exec().then(()=>{
+        console.log(filter);
+        like.update(update).exec().then(()=>{
             res.status(200).json({sucess:true, msg: "sucessfull updated"})
         }).catch(()=>{
             res.status(200).json({sucess:false, msg: "oh oh Error Ocurred. Trying to updated"})
