@@ -224,21 +224,21 @@ app.post('/getMyVideoLike', (req, res)=>{
 })
 app.post('/like', async(req, res)=>{
     const {userId, videoId, typeLike} = req.body;
-    console.log(userId, videoId, typeLike);
     var resp = await CheckUserLike(userId, videoId);
     const filter = {
         userId : userId,
         videoId : videoId,
         typeLike : typeLike
     }
-    const update = ({
+    const filterUpdate = ({
         userId : userId,
     videoId : videoId
-    }, {
+    });
+    const update = ( {
         $set: {
             typeLike : typeLike
         }
-    });
+    })
     const newLike = new like(filter);
     if(resp.length === 0){
         newLike.save().then(()=>{
@@ -254,7 +254,7 @@ app.post('/like', async(req, res)=>{
         });
     }else{
         console.log(filter);
-        like.update(update).exec().then(()=>{
+        like.updateOne(filterUpdate, update).exec().then(()=>{
             res.status(200).json({sucess:true, msg: "sucessfull updated"})
         }).catch(()=>{
             res.status(200).json({sucess:false, msg: "oh oh Error Ocurred. Trying to updated"})
